@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Cozy Book Diary — Word Cap + Scrolling Paper (with Login)</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <style>
+            :root {
+                --ink: #2b2b2b;
+                --muted: #6b7280;
+                --paper: #fffef8;
+                --line: rgba(60, 100, 160, .18);
+                --margin: rgba(220, 40, 70, .22);
+                --shadow: 0 24px 64px rgba(0, 0, 0, .16);
+            }
+
+            * {
+                box-sizing: border-box
+            }
+
+            html,
+            body {
+                height: 100%
+            }
+
+            body {
+                margin: 0;
+                background:
+                    radial-gradient(1200px 600px at -10% -20%, #ffeaf0 0%, transparent 60%),
+                    radial-gradient(1000px 500px at 110% -10%, #e6fff6 0%, transparent 60%),
+                    radial-gradient(900px 600px at 50% 120%, #fff2d6 0%, transparent 60%),
+                    #fffaf3;
+                color: var(--ink);
+                font: 17px/1.6 "Georgia", "Garamond", ui-serif, system-ui, -apple-system, "Segoe UI", Roboto, serif;
+                display: grid;
+                place-items: center;
+            }
+
+            /* Login overlay (new) */
+            .login {
+                position: fixed;
+                inset: 0;
+                display: grid;
+                place-items: center;
+                padding: 16px;
+                background:
+                    radial-gradient(900px 600px at 10% 0%, rgba(255, 235, 240, .9) 0%, rgba(255, 235, 240, 0) 60%),
+                    radial-gradient(900px 600px at 90% 100%, rgba(230, 255, 246, .9) 0%, rgba(230, 255, 246, 0) 60%),
+                    #fffaf3;
+                z-index: 10;
+            }
+
+            .card {
+                width: 100%;
+                max-width: 420px;
+                background: #fff;
+                border: 1px solid #eef2f7;
+                border-radius: 16px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, .12);
+                padding: 20px;
+                display: grid;
+                gap: 12px;
+            }
+
+            .row {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+                justify-content: space-between
+            }
+
+            .pill {
+                background: #fff3f7;
+                border: 1px solid #ffe2eb;
+                color: #7b5068;
+                padding: 6px 10px;
+                border-radius: 999px;
+                font-weight: 600
+            }
+
+            .muted {
+                color: #6b7280;
+                font-size: 14px
+            }
+
+            input[type=password] {
+                width: 100%;
+                padding: 12px 14px;
+                border: 1px solid #e5e7eb;
+                border-radius: 12px;
+                font: inherit;
+                outline: none;
+            }
+
+            input:focus {
+                border-color: #94a3b8;
+                box-shadow: 0 0 0 3px rgba(148, 163, 184, .2)
+            }
+
+            .login button {
+                appearance: none;
+                border: 1px solid #e8e4d7;
+                background: #111827;
+                color: #fff;
+                padding: 10px 14px;
+                border-radius: 10px;
+                cursor: pointer;
+                font: 600 14px/1 ui-sans-serif, system-ui;
+                box-shadow: 0 6px 16px rgba(0, 0, 0, .12);
+            }
+
+            /* Original styles below (unchanged layout/behavior) */
+            .wrap {
+                width: min(920px, 100vw);
+                height: 100vh;
+                display: grid;
+                place-items: center;
+                padding: 12px;
+            }
+
+            .book {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                border-radius: 16px;
+                box-shadow: var(--shadow);
+                background: var(--paper);
+                overflow: hidden;
+                display: grid;
+                grid-template-rows: auto 1fr auto;
+            }
+
+            .topbar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                padding: 10px 12px;
+                background: linear-gradient(180deg, rgba(255, 255, 255, .7), rgba(255, 255, 255, 0));
+                font-size: 14px;
+            }
+
+            .controls {
+                display: flex;
+                gap: 8px
+            }
+
+            button {
+                appearance: none;
+                border: 1px solid #e8e4d7;
+                background: #ffffffcc;
+                color: #1f2937;
+                padding: 8px 12px;
+                border-radius: 10px;
+                cursor: pointer;
+                font: 600 14px/1 ui-sans-serif, system-ui;
+                transition: transform .03s ease, box-shadow .2s ease, background .2s ease;
+                box-shadow: 0 6px 16px rgba(0, 0, 0, .08);
+                backdrop-filter: blur(2px);
+            }
+
+            button:active {
+                transform: translateY(1px)
+            }
+
+            .pill.small {
+                background: #fff3f7;
+                border: 1px solid #ffe2eb;
+                color: #7b5068;
+                padding: 6px 10px;
+                border-radius: 999px;
+                font-weight: 600
+            }
+
+            .page {
+                position: relative;
+                margin: 8px 12px 12px;
+                border-radius: 12px;
+                border: 1px solid #efe9da;
+                display: grid;
+                /* Four explicit rows prevent implicit tracks from pushing the editor */
+                grid-template-rows: auto auto 1fr auto;
+                /* title | meta | editor | footer */
+                grid-template-areas:
+                    "title"
+                    "meta"
+                    "body"
+                    "bottom";
+                overflow: hidden;
+                background: var(--paper);
+            }
+
+            .title {
+                grid-area: title;
+                border: none;
+                outline: none;
+                background: transparent;
+                width: 100%;
+                margin: 0;
+                padding: 10px 16px 2px 90px;
+                font-size: 24px;
+                line-height: 1.2;
+                font-weight: 700;
+                letter-spacing: .2px;
+            }
+
+            .meta {
+                grid-area: meta;
+                padding: 0 16px 6px 90px;
+                font-size: 13px;
+                color: var(--muted);
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+
+            .paper-body {
+                grid-area: body;
+                overflow: auto;
+                padding: 2px 16px 14px 90px;
+                background:
+                    linear-gradient(90deg, transparent 0 72px, var(--margin) 72px 74px, transparent 74px 100%),
+                    repeating-linear-gradient(180deg, transparent 0 32px, var(--line) 32px 33px),
+                    var(--paper);
+                background-attachment: local, local, local;
+                /* texture follows scroll */
+            }
+
+            .content {
+                min-height: auto;
+                /* don’t push to bottom */
+                white-space: pre-wrap;
+                outline: none;
+                caret-color: #1b3a5a;
+                font-size: 18px;
+                line-height: 32px;
+            }
+
+            .bottom {
+                grid-area: bottom;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 8px 12px 12px;
+                font-size: 13px;
+                color: var(--muted);
+                background: linear-gradient(0deg, rgba(255, 255, 255, .7), rgba(255, 255, 255, 0));
+                border-top: 1px solid rgba(0, 0, 0, .035);
+            }
+
+            .page-num {
+                font-variant-numeric: tabular-nums;
+                letter-spacing: .02em
+            }
+
+            .fab-save {
+                position: absolute;
+                right: 18px;
+                bottom: 18px;
+                border: none;
+                background: #111827;
+                color: #fff;
+                border-radius: 999px;
+                padding: 12px 16px;
+                font: 600 14px/1 ui-sans-serif, system-ui;
+                box-shadow: 0 10px 24px rgba(0, 0, 0, .22);
+                display: none;
+            }
+
+            .fab-save.show {
+                display: block
+            }
+
+            @media (max-width:740px) {
+                .wrap {
+                    padding: 0
+                }
+
+                .book {
+                    border-radius: 0;
+                    box-shadow: none
+                }
+
+                .topbar .brand {
+                    display: none
+                }
+            }
+        </style>
+    </head>
+    <body>
+
+        <!-- Login overlay (new) -->
+        <div id="login" class="login">
+            <div class="card">
+                <div class="row">
+                    <div class="pill">Cozy Book</div>
+                    <div class="muted">Enter password</div>
+                </div>
+                <input id="pass" type="password" placeholder="Password (any value works)" />
+                <button id="enterBtn">Enter</button>
+                <div class="muted">This is a dummy lock for UI testing only.</div>
+            </div>
+        </div>
+
+        <!-- Original app -->
+        <div class="wrap" id="app">
+            <div class="book">
+                <div class="topbar">
+                    <div class="brand pill small">Cozy Book</div>
+                    <div id="today"></div>
+                    <div class="controls">
+                        <button id="prevBtn">Prev</button>
+                        <button id="newBtn">+</button>
+                        <button id="nextBtn">Next</button>
+                    </div>
+                </div>
+
+                <div class="page">
+                    <input id="title" class="title" placeholder="Page title…" maxlength="80" />
+                    <div class="meta">
+                        <span id="dateMeta">—</span>
+                        <span>•</span>
+                        <label>Mood:
+                            <select id="mood">
+                                <option value="😊">😊</option>
+                                <option value="😌">😌</option>
+                                <option value="🤔">🤔</option>
+                                <option value="🥲">🥲</option>
+                                <option value="🚀">🚀</option>
+                            </select>
+                        </label>
+                        <span id="lockState"></span>
+                        <span id="wc" title="Words on this page">0w</span>
+                    </div>
+                    <div id="paperBody" class="paper-body">
+                        <div id="content" class="content" contenteditable="plaintext-only" spellcheck="true"
+                            placeholder="Write along the lines…"></div>
+                    </div>
+                    <button id="saveFab" class="fab-save">Save</button>
+                    <div class="bottom">
+                        <span id="status">Ready</span>
+                        <span class="page-num" id="pager" title="Long-press to delete">1 / 1</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            /* ===== your original logic (unchanged) ===== */
+            const WORDS_PER_PAGE = 400;
+            const LS_KEY = "cozy-book-diary.v3";
+            let pages = []; let i = 0;
+
+            function load() { try { pages = JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { pages = []; } if (!pages.length) pages.push(makePage("Welcome", "Write your first cozy page ✨", "😊", false)); }
+            function saveAll() { localStorage.setItem(LS_KEY, JSON.stringify(pages)); }
+            function makePage(title = "", content = "", mood = "😊", locked = false) { const now = Date.now(); return { id: crypto.randomUUID ? crypto.randomUUID() : "id_" + now, createdAt: now, updatedAt: now, title, content, mood, locked }; }
+
+            const $ = s => document.querySelector(s);
+            const titleEl = $("#title"); const contentEl = $("#content"); const moodEl = $("#mood");
+            const pagerEl = $("#pager"); const dateMetaEl = $("#dateMeta"); const todayEl = $("#today");
+            const statusEl = $("#status"); const lockStateEl = $("#lockState"); const saveFab = $("#saveFab"); const wcEl = $("#wc");
+            const paperBodyEl = $("#paperBody");
+
+            function fmt(ts) { return new Date(ts).toLocaleString(); }
+            function setStatus(msg) { statusEl.textContent = msg; setTimeout(() => { if (statusEl.textContent === msg) statusEl.textContent = "Ready"; }, 1600); }
+
+            function countWords(text) {
+                if (window.Intl && Intl.Segmenter) { const seg = new Intl.Segmenter(navigator.language || "en", { granularity: "word" }); let n = 0; for (const s of seg.segment(text)) if (s.isWordLike) n++; return n; }
+                return text.trim().split(/\s+/).filter(Boolean).length;
+            }
+            function cutoffIndexAtWord(text, limit) {
+                if (window.Intl && Intl.Segmenter) { const seg = new Intl.Segmenter(navigator.language || "en", { granularity: "word" }); let n = 0, cut = text.length; for (const s of seg.segment(text)) { if (s.isWordLike) { n++; if (n === limit) { cut = s.index + s.segment.length; break; } } } return cut; }
+                let seen = 0, idx = 0; const re = /(\S+|\s+)/g; for (const m of text.matchAll(re)) { const tok = m[0]; if (/\S/.test(tok)) { seen++; if (seen === limit) { idx = m.index + tok.length; break; } } } return idx || text.length;
+            }
+
+            function render() {
+                const p = pages[i]; if (!p) return;
+                titleEl.value = p.title || "";
+                contentEl.textContent = p.content || "";
+                moodEl.value = p.mood || "😊";
+                dateMetaEl.textContent = "Created " + new Date(p.createdAt).toDateString() + " • Updated " + fmt(p.updatedAt);
+                pagerEl.textContent = (i + 1) + " / " + pages.length;
+                lockStateEl.textContent = p.locked ? "Locked" : "Editing";
+                setEditable(!p.locked);
+                wcEl.textContent = countWords(p.content) + "w";
+                toggleSave(false);
+            }
+            function setEditable(editable) {
+                titleEl.readOnly = !editable; moodEl.disabled = !editable;
+                contentEl.setAttribute("contenteditable", editable ? "plaintext-only" : "false");
+            }
+            function enforceWordCapAndSplit() {
+                const p = pages[i]; if (!p || p.locked) return;
+                const text = contentEl.textContent;
+                const words = countWords(text);
+                wcEl.textContent = words + "w";
+                if (words <= WORDS_PER_PAGE) return;
+
+                const cut = cutoffIndexAtWord(text, WORDS_PER_PAGE);
+                const head = text.slice(0, cut).trimEnd();
+                const tail = text.slice(cut).trimStart();
+
+                p.title = titleEl.value.trim();
+                p.content = head;
+                p.mood = moodEl.value;
+                p.updatedAt = Date.now();
+
+                const newP = makePage("", tail, p.mood, false);
+                pages.splice(i + 1, 0, newP);
+                saveAll();
+
+                render();
+                i = i + 1;
+                render();
+                setStatus("Continued on new page");
+            }
+            function finalizeAllUpToCurrent() {
+                const p = pages[i]; if (!p) return;
+                if (!p.locked) {
+                    p.title = titleEl.value.trim();
+                    p.content = contentEl.textContent;
+                    p.mood = moodEl.value;
+                    p.updatedAt = Date.now();
+                }
+                const now = Date.now();
+                for (let k = 0; k <= i; k++) {
+                    if (!pages[k].locked) { pages[k].locked = true; pages[k].updatedAt = now; }
+                }
+                saveAll(); render(); toggleSave(false); setStatus("Saved and locked all pages so far");
+            }
+            function prev() { if (i > 0) { i--; render(); setStatus("Prev page"); } }
+            function next() { if (i < pages.length - 1) { i++; render(); setStatus("Next page"); } }
+            function addNew() {
+                const mood = pages[i]?.mood || "😊";
+                pages.splice(i + 1, 0, makePage("", "", mood, false));
+                i++;
+                saveAll();
+                render();
+                setStatus("New page");
+            }
+            let pressTimer = null;
+            function startDeletePress() {
+                pressTimer = setTimeout(() => {
+                    const p = pages[i]; if (!p) return;
+                    const typed = prompt("Type DELETE to remove this page");
+                    if (typed === "DELETE") {
+                        if (p.locked && !confirm("This page is locked. Delete anyway?")) return;
+                        pages.splice(i, 1);
+                        if (i >= pages.length) i = Math.max(0, pages.length - 1);
+                        if (!pages.length) { pages.push(makePage("", "", "😊", false)); i = 0; }
+                        saveAll(); render(); setStatus("Deleted");
+                    } else { setStatus("Deletion cancelled"); }
+                }, 1200);
+            }
+            function cancelDeletePress() { clearTimeout(pressTimer); pressTimer = null; }
+            function toggleSave(show) { saveFab.classList.toggle("show", !!show); }
+            function onAnyEdit() {
+                const p = pages[i]; if (!p || p.locked) return;
+                toggleSave(true);
+                clearTimeout(onAnyEdit._t);
+                onAnyEdit._t = setTimeout(() => {
+                    p.title = titleEl.value.trim();
+                    p.content = contentEl.textContent;
+                    p.mood = moodEl.value;
+                    p.updatedAt = Date.now();
+                    wcEl.textContent = countWords(p.content) + "w";
+                    saveAll();
+                }, 350);
+            }
+
+            /* ===== Minimal login gate (new) ===== */
+            const login = document.querySelector("#login");
+            const pass = document.querySelector("#pass");
+            const enterBtn = document.querySelector("#enterBtn");
+
+            function bootApp() {
+                todayEl.textContent = new Date().toDateString();
+                load();
+                render();
+
+                // Wire controls (same as original DOMContentLoaded block)
+                $("#prevBtn").addEventListener("click", prev);
+                $("#nextBtn").addEventListener("click", next);
+                $("#newBtn").addEventListener("click", addNew);
+                saveFab.addEventListener("click", finalizeAllUpToCurrent);
+
+                titleEl.addEventListener("input", onAnyEdit);
+                moodEl.addEventListener("change", onAnyEdit);
+                contentEl.addEventListener("input", () => { onAnyEdit(); enforceWordCapAndSplit(); });
+                contentEl.addEventListener("paste", () => { setTimeout(() => { onAnyEdit(); enforceWordCapAndSplit(); }, 0); });
+
+                pagerEl.addEventListener("mousedown", startDeletePress);
+                pagerEl.addEventListener("mouseup", cancelDeletePress);
+                pagerEl.addEventListener("mouseleave", cancelDeletePress);
+                pagerEl.addEventListener("touchstart", (e) => { e.preventDefault(); startDeletePress(); }, { passive: false });
+                pagerEl.addEventListener("touchend", cancelDeletePress);
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
+                // Show login first; accept any password, including empty, for UI testing
+                login.style.display = "grid";
+                enterBtn.addEventListener("click", () => {
+                    // dummy: any value works; require at least 1 char to avoid accidental enter
+                    if ((pass.value || "").length >= 1) {
+                        login.style.display = "none";
+                        bootApp();
+                    } else {
+                        alert("Enter any password to continue (demo)");
+                        pass.focus();
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>
