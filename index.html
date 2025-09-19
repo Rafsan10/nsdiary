@@ -6,12 +6,44 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <style>
             :root {
+                /* Light defaults */
+                --bg: #fffaf3;
+                --paper: #fffef8;
                 --ink: #2b2b2b;
                 --muted: #6b7280;
-                --paper: #fffef8;
                 --line: rgba(60, 100, 160, .18);
                 --margin: rgba(220, 40, 70, .22);
                 --shadow: 0 24px 64px rgba(0, 0, 0, .16);
+                --btn: #111827;
+                --btnText: #fff;
+            }
+
+            /* Dark theme when user toggles */
+            :root[data-theme="dark"] {
+                --bg: #0e1217;
+                --paper: #0f141a;
+                --ink: #e6edf3;
+                --muted: #9aa4af;
+                --line: rgba(120, 160, 220, .18);
+                --margin: rgba(240, 90, 120, .28);
+                --shadow: 0 24px 64px rgba(0, 0, 0, .38);
+                --btn: #e6edf3;
+                --btnText: #0e1217;
+            }
+
+            /* Follow system when no explicit toggle */
+            @media (prefers-color-scheme: dark) {
+                :root:not([data-theme="light"]) {
+                    --bg: #0e1217;
+                    --paper: #0f141a;
+                    --ink: #e6edf3;
+                    --muted: #9aa4af;
+                    --line: rgba(120, 160, 220, .18);
+                    --margin: rgba(240, 90, 120, .28);
+                    --shadow: 0 24px 64px rgba(0, 0, 0, .38);
+                    --btn: #e6edf3;
+                    --btnText: #0e1217;
+                }
             }
 
             * {
@@ -25,38 +57,34 @@
 
             body {
                 margin: 0;
-                background:
-                    radial-gradient(1200px 600px at -10% -20%, #ffeaf0 0%, transparent 60%),
-                    radial-gradient(1000px 500px at 110% -10%, #e6fff6 0%, transparent 60%),
-                    radial-gradient(900px 600px at 50% 120%, #fff2d6 0%, transparent 60%),
-                    #fffaf3;
+                background: var(--bg);
                 color: var(--ink);
                 font: 17px/1.6 "Georgia", "Garamond", ui-serif, system-ui, -apple-system, "Segoe UI", Roboto, serif;
                 display: grid;
                 place-items: center;
             }
 
-            /* Login overlay (new) */
+            /* Login overlay */
             .login {
                 position: fixed;
                 inset: 0;
+                z-index: 10;
                 display: grid;
                 place-items: center;
                 padding: 16px;
                 background:
-                    radial-gradient(900px 600px at 10% 0%, rgba(255, 235, 240, .9) 0%, rgba(255, 235, 240, 0) 60%),
-                    radial-gradient(900px 600px at 90% 100%, rgba(230, 255, 246, .9) 0%, rgba(230, 255, 246, 0) 60%),
-                    #fffaf3;
-                z-index: 10;
+                    radial-gradient(900px 600px at 10% 0%, color-mix(in oklab, var(--paper) 90%, transparent) 0%, transparent 60%),
+                    radial-gradient(900px 600px at 90% 100%, color-mix(in oklab, var(--paper) 90%, transparent) 0%, transparent 60%),
+                    var(--bg);
             }
 
             .card {
                 width: 100%;
                 max-width: 420px;
-                background: #fff;
-                border: 1px solid #eef2f7;
+                background: var(--paper);
+                border: 1px solid color-mix(in oklab, var(--ink) 8%, transparent);
                 border-radius: 16px;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, .12);
+                box-shadow: 0 20px 60px color-mix(in oklab, #000 20%, transparent);
                 padding: 20px;
                 display: grid;
                 gap: 12px;
@@ -69,47 +97,41 @@
                 justify-content: space-between
             }
 
-            .pill {
-                background: #fff3f7;
-                border: 1px solid #ffe2eb;
-                color: #7b5068;
-                padding: 6px 10px;
-                border-radius: 999px;
-                font-weight: 600
-            }
-
             .muted {
-                color: #6b7280;
+                color: var(--muted);
                 font-size: 14px
             }
 
-            input[type=password] {
+            input[type=password],
+            input[type=text] {
                 width: 100%;
                 padding: 12px 14px;
-                border: 1px solid #e5e7eb;
+                border: 1px solid color-mix(in oklab, var(--ink) 15%, transparent);
                 border-radius: 12px;
                 font: inherit;
                 outline: none;
+                background: var(--paper);
+                color: var(--ink);
             }
 
             input:focus {
-                border-color: #94a3b8;
-                box-shadow: 0 0 0 3px rgba(148, 163, 184, .2)
+                border-color: color-mix(in oklab, var(--ink) 35%, transparent);
+                box-shadow: 0 0 0 3px color-mix(in oklab, var(--ink) 18%, transparent)
             }
 
             .login button {
                 appearance: none;
-                border: 1px solid #e8e4d7;
-                background: #111827;
-                color: #fff;
+                border: none;
+                background: var(--btn);
+                color: var(--btnText);
                 padding: 10px 14px;
                 border-radius: 10px;
                 cursor: pointer;
                 font: 600 14px/1 ui-sans-serif, system-ui;
-                box-shadow: 0 6px 16px rgba(0, 0, 0, .12);
+                box-shadow: 0 6px 16px color-mix(in oklab, #000 30%, transparent);
             }
 
-            /* Original styles below (unchanged layout/behavior) */
+            /* App shell */
             .wrap {
                 width: min(920px, 100vw);
                 height: 100vh;
@@ -136,8 +158,9 @@
                 justify-content: space-between;
                 gap: 8px;
                 padding: 10px 12px;
-                background: linear-gradient(180deg, rgba(255, 255, 255, .7), rgba(255, 255, 255, 0));
                 font-size: 14px;
+                background: color-mix(in oklab, var(--paper) 90%, transparent);
+                border-bottom: 1px solid color-mix(in oklab, var(--ink) 8%, transparent);
             }
 
             .controls {
@@ -147,40 +170,38 @@
 
             button {
                 appearance: none;
-                border: 1px solid #e8e4d7;
-                background: #ffffffcc;
-                color: #1f2937;
+                border: 1px solid color-mix(in oklab, var(--ink) 10%, transparent);
+                background: color-mix(in oklab, var(--paper) 90%, transparent);
+                color: var(--ink);
                 padding: 8px 12px;
                 border-radius: 10px;
                 cursor: pointer;
                 font: 600 14px/1 ui-sans-serif, system-ui;
                 transition: transform .03s ease, box-shadow .2s ease, background .2s ease;
-                box-shadow: 0 6px 16px rgba(0, 0, 0, .08);
-                backdrop-filter: blur(2px);
+                box-shadow: 0 6px 16px color-mix(in oklab, #000 12%, transparent);
             }
 
             button:active {
                 transform: translateY(1px)
             }
 
-            .pill.small {
-                background: #fff3f7;
-                border: 1px solid #ffe2eb;
-                color: #7b5068;
+            .pill {
+                background: color-mix(in oklab, var(--paper) 80%, transparent);
+                border: 1px solid color-mix(in oklab, var(--ink) 10%, transparent);
+                color: var(--ink);
                 padding: 6px 10px;
                 border-radius: 999px;
                 font-weight: 600
             }
 
+            /* Page layout: title | meta | editor | footer */
             .page {
                 position: relative;
                 margin: 8px 12px 12px;
                 border-radius: 12px;
-                border: 1px solid #efe9da;
+                border: 1px solid color-mix(in oklab, var(--ink) 8%, transparent);
                 display: grid;
-                /* Four explicit rows prevent implicit tracks from pushing the editor */
                 grid-template-rows: auto auto 1fr auto;
-                /* title | meta | editor | footer */
                 grid-template-areas:
                     "title"
                     "meta"
@@ -202,51 +223,63 @@
                 line-height: 1.2;
                 font-weight: 700;
                 letter-spacing: .2px;
+                color: var(--ink);
             }
 
             .meta {
                 grid-area: meta;
-                padding: 0 16px 6px 90px;
+                padding: 6px 16px 8px 90px;
                 font-size: 13px;
                 color: var(--muted);
                 display: flex;
                 gap: 10px;
                 align-items: center;
                 flex-wrap: wrap;
+                border-bottom: 1px solid color-mix(in oklab, var(--ink) 8%, transparent);
             }
 
+            /* Scrollable writing surface; lined paper moves with scroll */
             .paper-body {
                 grid-area: body;
                 overflow: auto;
-                padding: 2px 16px 14px 90px;
+                padding: 2px 16px calc(14px + env(safe-area-inset-bottom)) 90px;
                 background:
                     linear-gradient(90deg, transparent 0 72px, var(--margin) 72px 74px, transparent 74px 100%),
                     repeating-linear-gradient(180deg, transparent 0 32px, var(--line) 32px 33px),
                     var(--paper);
                 background-attachment: local, local, local;
-                /* texture follows scroll */
             }
 
             .content {
                 min-height: auto;
-                /* don’t push to bottom */
                 white-space: pre-wrap;
                 outline: none;
                 caret-color: #1b3a5a;
                 font-size: 18px;
                 line-height: 32px;
+                color: var(--ink);
             }
 
+            .content[contenteditable="false"] {
+                user-select: text
+            }
+
+            .content[contenteditable][data-empty]:before {
+                content: attr(placeholder);
+                color: color-mix(in oklab, var(--muted) 80%, transparent)
+            }
+
+            /* Footer */
             .bottom {
                 grid-area: bottom;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                padding: 8px 12px 12px;
+                padding: 8px 12px calc(12px + env(safe-area-inset-bottom));
                 font-size: 13px;
                 color: var(--muted);
-                background: linear-gradient(0deg, rgba(255, 255, 255, .7), rgba(255, 255, 255, 0));
-                border-top: 1px solid rgba(0, 0, 0, .035);
+                background: color-mix(in oklab, var(--paper) 90%, transparent);
+                border-top: 1px solid color-mix(in oklab, var(--ink) 8%, transparent);
             }
 
             .page-num {
@@ -254,17 +287,18 @@
                 letter-spacing: .02em
             }
 
+            /* Floating Save stays above keyboard/safe area; JS will add extra kb offset */
             .fab-save {
                 position: absolute;
-                right: 18px;
-                bottom: 18px;
+                right: 16px;
+                bottom: calc(16px + env(safe-area-inset-bottom));
                 border: none;
-                background: #111827;
-                color: #fff;
+                background: var(--btn);
+                color: var(--btnText);
                 border-radius: 999px;
                 padding: 12px 16px;
                 font: 600 14px/1 ui-sans-serif, system-ui;
-                box-shadow: 0 10px 24px rgba(0, 0, 0, .22);
+                box-shadow: 0 10px 24px color-mix(in oklab, #000 35%, transparent);
                 display: none;
             }
 
@@ -272,7 +306,25 @@
                 display: block
             }
 
-            @media (max-width:740px) {
+            /* Mobile refinements */
+            @media (max-width: 480px) {
+                .title {
+                    padding-left: 70px;
+                }
+
+                .meta {
+                    padding-left: 70px;
+                }
+
+                .paper-body {
+                    padding-left: 70px;
+                    background:
+                        linear-gradient(90deg, transparent 0 55px, var(--margin) 55px 57px, transparent 57px 100%),
+                        repeating-linear-gradient(180deg, transparent 0 30px, var(--line) 30px 31px),
+                        var(--paper);
+                    background-attachment: local, local, local;
+                }
+
                 .wrap {
                     padding: 0
                 }
@@ -310,6 +362,7 @@
                     <div class="brand pill small">Cozy Book</div>
                     <div id="today"></div>
                     <div class="controls">
+                        <button id="themeBtn" title="Toggle theme">Theme</button>
                         <button id="prevBtn">Prev</button>
                         <button id="newBtn">+</button>
                         <button id="nextBtn">Next</button>
@@ -480,6 +533,50 @@
                 render();
 
                 // Wire controls (same as original DOMContentLoaded block)
+                // Theme toggle: cycle light -> dark -> system
+                const themeBtn = document.getElementById("themeBtn");
+                function applyTheme(mode) { // "light" | "dark" | "system"
+                    if (mode === "light") { document.documentElement.setAttribute("data-theme", "light"); }
+                    else if (mode === "dark") { document.documentElement.setAttribute("data-theme", "dark"); }
+                    else { document.documentElement.removeAttribute("data-theme"); } // follow prefers-color-scheme
+                    localStorage.setItem("cozy.theme", mode);
+                }
+                themeBtn.addEventListener("click", () => {
+                    const cur = localStorage.getItem("cozy.theme") || "system";
+                    const next = cur === "system" ? "light" : cur === "light" ? "dark" : "system";
+                    applyTheme(next);
+                });
+                applyTheme(localStorage.getItem("cozy.theme") || "system"); // init
+
+                // Keep Save button and caret above virtual keyboard (Android/iOS)
+                // Requires that the browser supports VisualViewport; otherwise no-op.
+                const fab = document.getElementById("saveFab");
+                function updateKB() {
+                    const vv = window.visualViewport;
+                    if (!vv) return;
+                    // keyboard overlap height
+                    const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+                    fab.style.bottom = (16 + kb) + "px";                // lift FAB
+                    // ensure caret stays visible while typing
+                    const sel = window.getSelection();
+                    if (sel && sel.rangeCount) {
+                        const range = sel.getRangeAt(0).cloneRange(); range.collapse(true);
+                        const rect = range.getBoundingClientRect();
+                        const wrap = document.getElementById("paperBody").getBoundingClientRect();
+                        const pad = 24 + kb;
+                        if (rect.bottom > wrap.bottom - pad) {
+                            document.getElementById("paperBody").scrollTop += (rect.bottom - (wrap.bottom - pad));
+                        }
+                        if (rect.top < wrap.top + 24) {
+                            document.getElementById("paperBody").scrollTop -= ((wrap.top + 24) - rect.top);
+                        }
+                    }
+                }
+                if (window.visualViewport) {
+                    visualViewport.addEventListener("resize", updateKB);
+                    visualViewport.addEventListener("scroll", updateKB);
+                }
+
                 $("#prevBtn").addEventListener("click", prev);
                 $("#nextBtn").addEventListener("click", next);
                 $("#newBtn").addEventListener("click", addNew);
